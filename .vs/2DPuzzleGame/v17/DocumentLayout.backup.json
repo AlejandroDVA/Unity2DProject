@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Unity\\Projects\\2DPuzzleGame\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{FC00231B-2AE1-2DFB-66D2-12D7C172C9A2}|Assembly-CSharp.csproj|d:\\unity\\projects\\2dpuzzlegame\\assets\\scripts\\mainmovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC00231B-2AE1-2DFB-66D2-12D7C172C9A2}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\mainmovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainMovement.cs",
+              "DocumentMoniker": "D:\\Unity\\Projects\\2DPuzzleGame\\Assets\\Scripts\\MainMovement.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\MainMovement.cs",
+              "ToolTip": "D:\\Unity\\Projects\\2DPuzzleGame\\Assets\\Scripts\\MainMovement.cs",
+              "RelativeToolTip": "Assets\\Scripts\\MainMovement.cs",
+              "ViewState": "AgIAAHoAAAAAAAAAAAAwwKkAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-08T21:53:42.564Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

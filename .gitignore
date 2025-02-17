@@ -1,0 +1,30 @@
+# Archivos de Unity innecesarios
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Archivos generados automáticamente
+*.csproj
+*.sln
+*.unityproj
+
+# Carpetas de imágenes y texturas grandes (si no deseas subirlas)
+Assets/Textures/
+Assets/Sprites/
+Assets/SpriteSheet/
+Assets/Tilesets/
+Assets/backgrounds/
+Assets/Palette/
+Assets/Animations/
+
+# Configuración de usuario y otros archivos locales
+*.swp
+*.swo
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
