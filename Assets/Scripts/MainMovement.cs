@@ -15,7 +15,8 @@ public enum states
     walk,
     run,
     air,
-    grabbing
+    grabbing,
+    pushpull
 }
 public class MainMovement : MonoBehaviour
 {
@@ -27,14 +28,17 @@ public class MainMovement : MonoBehaviour
     [SerializeField] private float walkSpeed;
     [SerializeField] private float jumpForce;
     [SerializeField] private float runSpeed;
-    [SerializeField] private float grabbingSpeed;
+    [SerializeField] private float pushSpeed;
     [SerializeField] private float aceleration;
     [SerializeField] private LayerMask floorMask;
+    [SerializeField] private Vector3 objGrbPos;
     private float horizontal;
     private float anguloPendienteAnterior = 0.0f;
     private Animator animator;
     private Rigidbody2D rb2d;
     private CapsuleCollider2D playerCollider;
+
+    GameObject objGrabbed = null;
 
     private bool btnJump;
     private bool btnRun;
@@ -75,35 +79,26 @@ public class MainMovement : MonoBehaviour
     void FixedUpdate()
     {
         //Movimiento horizontal del personaje en el suelo
-        if (currentState == states.walk)
+        if (currentState == states.walk || currentState == states.grabbing)
         {
             if (Mathf.Abs(rb2d.linearVelocityX) < walkSpeed)
             {
                 rb2d.AddForce(new Vector2(horizontal * aceleration, 0));
             }
-            // else if (Mathf.Abs(rb2d.linearVelocityX) > walkSpeed && horizontal != 0)
-            // {
-            //     rb2d.linearVelocity = new Vector2(horizontal * walkSpeed, rb2d.linearVelocity.y);
-            // }
         }
-        else if (currentState == states.grabbing)
+        else if (currentState == states.pushpull)
         {
-            if (Mathf.Abs(rb2d.linearVelocityX) < grabbingSpeed)
+            if (Mathf.Abs(rb2d.linearVelocityX) < pushSpeed)
             {
                 rb2d.AddForce(new Vector2(horizontal * aceleration, 0));
             }
         }
-        else
+        else if (currentState == states.run)
         {
             if (Mathf.Abs(rb2d.linearVelocityX) < runSpeed)
             {
                 rb2d.AddForce(new Vector2(horizontal * aceleration, 0));
             }
-            // else if (Mathf.Abs(rb2d.linearVelocityX) > runSpeed && horizontal != 0)
-            // {
-            //     rb2d.linearVelocity = new Vector2(horizontal * runSpeed, rb2d.linearVelocity.y);
-            // }
-
         }
     }
 
@@ -129,7 +124,7 @@ public class MainMovement : MonoBehaviour
     {
         Vector3 sangriaR = new Vector3(0.5f, 0.0f, 0.0f);
         Vector3 sangriaL = new Vector3(-0.5f, 0.0f, 0.0f);
-        float rcSize = 0.3f;
+        float rcSize = 1.0f;
 
         //>>>>>>Todos estos RAYCAST son en direccion hacia la derecha<<<<<
         RaycastHit2D rcCenterR = Physics2D.Raycast(transform.position + sangriaR, Vector3.right, rcSize);
@@ -141,7 +136,7 @@ public class MainMovement : MonoBehaviour
         RaycastHit2D rcBotR = Physics2D.Raycast(transform.position + sangriaR + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.right, rcSize);
         Debug.DrawRay(transform.position + sangriaR + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.right * rcSize, Color.blue);
 
-        //>>>>>Todos estos RAYCASR son en direccion hacia la izquierda<<<<<<
+        //>>>>>Todos estos RAYCAST son en direccion hacia la izquierda<<<<<<
         RaycastHit2D rcCenterL = Physics2D.Raycast(transform.position + sangriaL, Vector3.left, rcSize);
         Debug.DrawRay(transform.position + sangriaL, Vector3.left * rcSize, Color.blue);
 
@@ -151,63 +146,112 @@ public class MainMovement : MonoBehaviour
         RaycastHit2D rcBotL = Physics2D.Raycast(transform.position + sangriaL + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.left, rcSize);
         Debug.DrawRay(transform.position + sangriaL + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.left * rcSize, Color.blue);
 
+        float objMass = 100;
+
         if (btnGrab)
         {
-            Debug.Log("btnGrab presionado");
-            if (rcBotR || rcCenterR || rcTopR)
+            //Debug.Log("btnGrab presionado");
+            //>>>>>> Dependiendo de la direccion a la que mire, comprueba si hay un objeto <<<<<<<<
+            if (mirandoDer == true)
             {
-                currentState = states.grabbing;
-                Debug.Log("objeto tomado");
+                if (rcBotR.collider != null)
+                {
+                    objGrabbed = rcBotR.collider.gameObject;
+                }
+                else if (rcTopR.collider != null)
+                {
+                    objGrabbed = rcTopR.collider.gameObject;
+                }
+                else if (rcCenterR.collider != null)
+                {
+                    objGrabbed = rcCenterR.collider.gameObject;
+                }
+            }
+
+            if (mirandoDer == false)
+            {
+                if (rcBotL.collider != null)
+                {
+                    objGrabbed = rcBotL.collider.gameObject;
+                }
+                else if (rcTopL.collider != null)
+                {
+                    objGrabbed = rcTopL.collider.gameObject;
+                }
+                else if (rcCenterL.collider != null)
+                {
+                    objGrabbed = rcCenterL.collider.gameObject;
+                }
+            }
+
+            if (objGrabbed != null)
+            {
+                // >>>>>>>> Al Tomar un objeto <<<<<<<<<<
+                Debug.Log("objeto tomado: " + objGrabbed.tag);
+
+                if (objGrabbed.tag == "smallbox")
+                {
+                    currentState = states.grabbing;
+
+                    objGrabbed.transform.SetParent(this.transform);
+                    objGrabbed.transform.localPosition = objGrbPos;
+
+                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        rb.gravityScale = 0f; // Desactiva la gravedad
+                        rb.bodyType = RigidbodyType2D.Kinematic; // No será afectado por la física
+                    }
+                }
+                if (objGrabbed.tag == "bigbox")
+                {
+                    currentState = states.pushpull;
+
+                    objGrabbed.transform.SetParent(this.transform);
+                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        objMass = rb.mass;
+                        rb.mass = this.rb2d.mass;
+                    }
+
+                }
+            }
+            else
+            {
+                Debug.LogWarning("No se encontró ningún objeto para agarrar.");
             }
         }
         else
         {
-            Debug.Log("objeto soltado");
+            //>>>>>>>>> Al soltar el objeto <<<<<<<<<<
+            if (objGrabbed != null)
+            {
+                if (objGrabbed.tag == "smallbox")
+                {
+                    objGrabbed.transform.SetParent(null); // El objeto deja de ser hijo del jugador
+                    //Debug.Log("soltando");
+                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        rb.gravityScale = 1f; // Restaura la gravedad
+                        rb.bodyType = RigidbodyType2D.Dynamic; // Reactiva la física
+                    }
+                }
+
+                if (objGrabbed.tag == "bigbox")
+                {
+                    objGrabbed.transform.SetParent(null);
+                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        rb.mass = objMass;
+                    }
+                }
+            }
+            objGrabbed = null;
+            //Debug.Log("manos vacías");
         }
-
-
-        // if ((rcBotR.collider != null || rcCenterR.collider != null || rcTopR.collider != null) && (rcBotR.collider.gameObject.tag != null || rcCenterR.collider.gameObject.tag != null || rcTopR.collider.gameObject.tag != null))
-        // {
-        //     string colTag = (rcBotR.collider.gameObject.tag) != null ? rcBotR.collider.gameObject.tag : (rcCenterR.collider.gameObject.tag) != null ? rcCenterR.collider.gameObject.tag : (rcBotR.collider.gameObject.tag) != null ? rcBotR.collider.gameObject.tag : "null";
-
-        //     if (btnGrab)
-        //     {
-        //         currentState = states.grabbing;
-        //         if (rcBotR)
-        //         {
-        //             if (colTag == "smallbox")
-        //             {
-        //                 Debug.Log("Caja chica");
-        //                 rcBotR.collider.gameObject.transform.SetParent(this.transform);
-        //                 rcBotR.collider.gameObject.transform.localPosition = new Vector3(1.0f, 0.0f, 0.0f);
-        //             }
-        //         }
-        //         else if (rcCenterR)
-        //         {
-        //             if (colTag == "smallbox")
-        //             {
-        //                 Debug.Log("Caja chica");
-        //                 rcCenterR.collider.gameObject.transform.SetParent(this.transform);
-        //                 rcCenterR.collider.gameObject.transform.localPosition = new Vector3(1.0f, 0.0f, 0.0f);
-        //             }
-        //         }
-        //     }
-        //     else
-        //     {
-        //         Debug.Log("else");
-        //         if (currentState == states.grabbing)
-        //         {
-        //             Debug.Log("no grabbing");
-        //             currentState = states.idle;
-        //         }
-        //         if (rcCenterR.collider != null && rcCenterR.collider.gameObject.transform.parent != null)
-        //         {
-        //             Debug.Log("deja de ser hijo");
-        //             rcCenterR.collider.gameObject.transform.SetParent(null);
-        //         }
-
-        //}
-        //}
     }
 
     private void StateController(float colliderSizeX, float colliderSizeY)
@@ -221,6 +265,7 @@ public class MainMovement : MonoBehaviour
         RaycastHit2D rayCastLeft = Physics2D.Raycast(transform.position + btmHalfColSizeY + new Vector3(-colliderSizeX / 2.0f, 0.0f, 0.0f), Vector3.down, rcSize, floorMask);
         RaycastHit2D rayCastRight = Physics2D.Raycast(transform.position + btmHalfColSizeY + new Vector3(colliderSizeX / 2.0f, 0.0f, 0.0f), Vector3.down, rcSize, floorMask);
 
+        //>>>>>>>> Dibuja raycast en pantalla <<<<<<<<<<<<<
         //Debug.DrawRay(transform.position + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.down * rcSize, Color.red);
         //Debug.DrawRay(transform.position + new Vector3(0.0f, -colliderSizeY / 2, 0.0f) + new Vector3(-colliderSizeX / 2.0f, 0.0f, 0.0f), Vector3.down * rcSize, Color.red);
         //Debug.DrawRay(transform.position + new Vector3(0.0f, -colliderSizeY / 2, 0.0f) + new Vector3(colliderSizeX / 2.0f, 0.0f, 0.0f), Vector3.down * rcSize, Color.red);
@@ -229,7 +274,7 @@ public class MainMovement : MonoBehaviour
         grounded = rayCastCenter || rayCastLeft || rayCastRight ? true : false;
 
         //Verifica si el personaje esta en Idle, Walk o Run
-        if (currentState != states.air && currentState != states.grabbing)
+        if (currentState != states.air && currentState != states.grabbing && currentState != states.pushpull)
         {
             switch (horizontal)
             {
@@ -245,7 +290,6 @@ public class MainMovement : MonoBehaviour
     public void ComprobarPendiente()
     {
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 4f, floorMask);
-        //Debug.DrawRay(transform.position, Vector3.down * 4);
         float anguloPendienteABS = Vector2.Angle(hit.normal, Vector2.up);
         float signo = Mathf.Sign(Vector3.Cross(Vector3.up, hit.normal).z);
         float anguloPendiente = anguloPendienteABS * signo;
@@ -392,9 +436,9 @@ public class MainMovement : MonoBehaviour
         else
             btnRun = false;
 
-        if (Input.GetKey(KeyCode.LeftAlt))
+        if (Input.GetKeyDown(KeyCode.LeftAlt))
             btnGrab = true;
-        else
+        else if (Input.GetKeyUp(KeyCode.LeftAlt))
             btnGrab = false;
     }
 
