@@ -16,7 +16,8 @@ public enum states
     run,
     air,
     grabbing,
-    pushpull
+    pushpull,
+    climbing
 }
 public class MainMovement : MonoBehaviour
 {
@@ -31,6 +32,8 @@ public class MainMovement : MonoBehaviour
     [SerializeField] private float pushSpeed;
     [SerializeField] private float aceleration;
     [SerializeField] private LayerMask floorMask;
+    [SerializeField] private LayerMask boxesMask;
+    [SerializeField] private LayerMask climbMask;
     [SerializeField] private Vector3 objGrbPos;
     private float horizontal;
     private float anguloPendienteAnterior = 0.0f;
@@ -39,6 +42,7 @@ public class MainMovement : MonoBehaviour
     private CapsuleCollider2D playerCollider;
 
     GameObject objGrabbed = null;
+    GameObject cornisa = null;
 
     private bool btnJump;
     private bool btnRun;
@@ -72,6 +76,8 @@ public class MainMovement : MonoBehaviour
         Jump();
 
         Grab(colliderSizeX, colliderSizeY);
+
+        Climb(colliderSizeX, colliderSizeY);
 
         ComprobarPendiente();
     }
@@ -121,6 +127,48 @@ public class MainMovement : MonoBehaviour
         }
     }
 
+    private void Climb(float colliderSizeX, float colliderSizeY)
+    {
+        Vector3 sangriaR = new Vector3(0.5f, 0.0f, 0.0f);
+        Vector3 sangriaL = new Vector3(-0.5f, 0.0f, 0.0f);
+        float rcSize = 1.0f;
+
+        //>>>>>>>>>>>>>>>>Detecta a la altura de la cabeza si tiene una cornisa al alcance<<<<<<<<<<<<<<<<<<
+        RaycastHit2D rcTopR = Physics2D.Raycast(transform.position + sangriaR + new Vector3(0.0f, colliderSizeY / 2, 0.0f), Vector3.right, rcSize, climbMask);
+        Debug.DrawRay(transform.position + sangriaR + new Vector3(0.0f, colliderSizeY / 2f, 0.0f), Vector3.right * rcSize, Color.blue);
+
+        RaycastHit2D rcCenterR = Physics2D.Raycast(transform.position + sangriaR, Vector3.right, rcSize, climbMask);
+        Debug.DrawRay(transform.position + sangriaR, Vector3.right * rcSize, Color.blue);
+
+        RaycastHit2D rcCenterL = Physics2D.Raycast(transform.position + sangriaL, Vector3.left, rcSize, climbMask);
+        Debug.DrawRay(transform.position + sangriaL, Vector3.left * rcSize, Color.blue);
+
+        RaycastHit2D rcTopL = Physics2D.Raycast(transform.position + sangriaL + new Vector3(0.0f, colliderSizeY / 2, 0.0f), Vector3.left, rcSize, climbMask);
+        Debug.DrawRay(transform.position + sangriaL + new Vector3(0.0f, colliderSizeY / 2f, 0.0f), Vector3.left * rcSize, Color.blue);
+
+        if (rcTopL && !mirandoDer)
+        {
+            cornisa = rcTopL.collider.gameObject;
+            Debug.Log("Cornisa detectada, tag: " + cornisa.tag);
+        }
+        else if (rcTopR && mirandoDer)
+        {
+            cornisa = rcTopR.collider.gameObject;
+            Debug.Log("Cornisa detectada, tag: " + cornisa.tag);
+        }
+        else if (rcCenterL && !mirandoDer)
+        {
+            cornisa = rcCenterL.collider.gameObject;
+            Debug.Log("Cornisa detectada, tag: " + cornisa.tag);
+        }
+        else if (rcCenterR && mirandoDer)
+        {
+            cornisa = rcCenterR.collider.gameObject;
+            Debug.Log("Cornisa detectada, tag: " + cornisa.tag);
+        }
+
+    }
+
     private void Grab(float colliderSizeX, float colliderSizeY)
     {
         Vector3 sangriaR = new Vector3(0.5f, 0.0f, 0.0f);
@@ -128,24 +176,24 @@ public class MainMovement : MonoBehaviour
         float rcSize = 1.0f;
 
         //>>>>>>Todos estos RAYCAST son en direccion hacia la derecha<<<<<
-        RaycastHit2D rcCenterR = Physics2D.Raycast(transform.position + sangriaR, Vector3.right, rcSize);
-        Debug.DrawRay(transform.position + sangriaR, Vector3.right * rcSize, Color.blue);
+        RaycastHit2D rcCenterR = Physics2D.Raycast(transform.position + sangriaR, Vector3.right, rcSize, boxesMask);
+        //Debug.DrawRay(transform.position + sangriaR, Vector3.right * rcSize, Color.blue);
 
-        RaycastHit2D rcTopR = Physics2D.Raycast(transform.position + sangriaR + new Vector3(0.0f, colliderSizeY / 2, 0.0f), Vector3.right, rcSize);
-        Debug.DrawRay(transform.position + sangriaR + new Vector3(0.0f, colliderSizeY / 2f, 0.0f), Vector3.right * rcSize, Color.blue);
+        RaycastHit2D rcTopR = Physics2D.Raycast(transform.position + sangriaR + new Vector3(0.0f, colliderSizeY / 2, 0.0f), Vector3.right, rcSize, boxesMask);
+        //Debug.DrawRay(transform.position + sangriaR + new Vector3(0.0f, colliderSizeY / 2f, 0.0f), Vector3.right * rcSize, Color.blue);
 
-        RaycastHit2D rcBotR = Physics2D.Raycast(transform.position + sangriaR + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.right, rcSize);
-        Debug.DrawRay(transform.position + sangriaR + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.right * rcSize, Color.blue);
+        RaycastHit2D rcBotR = Physics2D.Raycast(transform.position + sangriaR + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.right, rcSize, boxesMask);
+        //Debug.DrawRay(transform.position + sangriaR + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.right * rcSize, Color.blue);
 
         //>>>>>Todos estos RAYCAST son en direccion hacia la izquierda<<<<<<
-        RaycastHit2D rcCenterL = Physics2D.Raycast(transform.position + sangriaL, Vector3.left, rcSize);
-        Debug.DrawRay(transform.position + sangriaL, Vector3.left * rcSize, Color.blue);
+        RaycastHit2D rcCenterL = Physics2D.Raycast(transform.position + sangriaL, Vector3.left, rcSize, boxesMask);
+        //Debug.DrawRay(transform.position + sangriaL, Vector3.left * rcSize, Color.blue);
 
-        RaycastHit2D rcTopL = Physics2D.Raycast(transform.position + sangriaL + new Vector3(0.0f, colliderSizeY / 2, 0.0f), Vector3.left, rcSize);
-        Debug.DrawRay(transform.position + sangriaL + new Vector3(0.0f, colliderSizeY / 2f, 0.0f), Vector3.left * rcSize, Color.blue);
+        RaycastHit2D rcTopL = Physics2D.Raycast(transform.position + sangriaL + new Vector3(0.0f, colliderSizeY / 2, 0.0f), Vector3.left, rcSize, boxesMask);
+        //Debug.DrawRay(transform.position + sangriaL + new Vector3(0.0f, colliderSizeY / 2f, 0.0f), Vector3.left * rcSize, Color.blue);
 
-        RaycastHit2D rcBotL = Physics2D.Raycast(transform.position + sangriaL + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.left, rcSize);
-        Debug.DrawRay(transform.position + sangriaL + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.left * rcSize, Color.blue);
+        RaycastHit2D rcBotL = Physics2D.Raycast(transform.position + sangriaL + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.left, rcSize, boxesMask);
+        //Debug.DrawRay(transform.position + sangriaL + new Vector3(0.0f, -colliderSizeY / 2, 0.0f), Vector3.left * rcSize, Color.blue);
 
         float objMass = 100;
 
@@ -254,17 +302,6 @@ public class MainMovement : MonoBehaviour
                     if (rb != null)
                     {
                         rb.mass = objMass;
-                    }
-                }
-                if (distancia > 5f)
-                {
-                    objGrabbed.transform.SetParent(null);
-                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
-                    if (rb != null)
-                    {
-                        rb.mass = objMass;
-                        rb.gravityScale = 1f;
-                        rb.bodyType = RigidbodyType2D.Dynamic;
                     }
                 }
             }
