@@ -88,6 +88,7 @@ public class MainMovement : MonoBehaviour
         }
         else if (currentState == states.pushpull)
         {
+            //Debug.Log("fixed update");
             if (Mathf.Abs(rb2d.linearVelocityX) < pushSpeed)
             {
                 rb2d.AddForce(new Vector2(horizontal * aceleration, 0));
@@ -187,7 +188,10 @@ public class MainMovement : MonoBehaviour
             if (objGrabbed != null)
             {
                 // >>>>>>>> Al Tomar un objeto <<<<<<<<<<
+
                 Debug.Log("objeto tomado: " + objGrabbed.tag);
+                Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                objMass = rb.mass;
 
                 if (objGrabbed.tag == "smallbox")
                 {
@@ -196,7 +200,7 @@ public class MainMovement : MonoBehaviour
                     objGrabbed.transform.SetParent(this.transform);
                     objGrabbed.transform.localPosition = objGrbPos;
 
-                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    //Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
                     if (rb != null)
                     {
                         rb.gravityScale = 0f; // Desactiva la gravedad
@@ -206,13 +210,16 @@ public class MainMovement : MonoBehaviour
                 if (objGrabbed.tag == "bigbox")
                 {
                     currentState = states.pushpull;
-
-                    objGrabbed.transform.SetParent(this.transform);
-                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    //Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    float distancia = objGrabbed.transform.position.x - transform.position.x;
                     if (rb != null)
                     {
-                        objMass = rb.mass;
                         rb.mass = this.rb2d.mass;
+                        if (Mathf.Abs(rb.linearVelocityX) < pushSpeed)
+                        {
+                            if ((mirandoDer && distancia < 0.0f) || (!mirandoDer && distancia > 0.0f))
+                                rb.AddForce(new Vector2(horizontal * aceleration, 0));
+                        }
                     }
 
                 }
@@ -227,6 +234,7 @@ public class MainMovement : MonoBehaviour
             //>>>>>>>>> Al soltar el objeto <<<<<<<<<<
             if (objGrabbed != null)
             {
+                float distancia = Vector2.Distance(transform.position, objGrabbed.transform.position);
                 if (objGrabbed.tag == "smallbox")
                 {
                     objGrabbed.transform.SetParent(null); // El objeto deja de ser hijo del jugador
@@ -246,6 +254,17 @@ public class MainMovement : MonoBehaviour
                     if (rb != null)
                     {
                         rb.mass = objMass;
+                    }
+                }
+                if (distancia > 5f)
+                {
+                    objGrabbed.transform.SetParent(null);
+                    Rigidbody2D rb = objGrabbed.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        rb.mass = objMass;
+                        rb.gravityScale = 1f;
+                        rb.bodyType = RigidbodyType2D.Dynamic;
                     }
                 }
             }
@@ -276,6 +295,7 @@ public class MainMovement : MonoBehaviour
         //Verifica si el personaje esta en Idle, Walk o Run
         if (currentState != states.air && currentState != states.grabbing && currentState != states.pushpull)
         {
+            Debug.Log("State controller");
             switch (horizontal)
             {
                 case 0:
@@ -348,7 +368,8 @@ public class MainMovement : MonoBehaviour
             case states.walk:
                 if (horizontal > 0.0f)
                 {
-                    transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+                    if (!(objGrabbed != null && objGrabbed.CompareTag("bigbox")))
+                        transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
                     mirandoDer = true;
                     animator.SetBool("walk", true);
                     animator.SetBool("run", false);
@@ -358,7 +379,8 @@ public class MainMovement : MonoBehaviour
 
                 if (horizontal < 0.0f)
                 {
-                    transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+                    if (!(objGrabbed != null && objGrabbed.CompareTag("bigbox")))
+                        transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
                     mirandoDer = false;
                     animator.SetBool("walk", true);
                     animator.SetBool("run", false);
@@ -377,7 +399,8 @@ public class MainMovement : MonoBehaviour
                     {
                         animator.speed = 1;
                     }
-                    transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+                    if (!(objGrabbed != null && objGrabbed.CompareTag("bigbox")))
+                        transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
                     mirandoDer = true;
                     animator.SetBool("walk", false);
                     animator.SetBool("run", true);
@@ -395,7 +418,8 @@ public class MainMovement : MonoBehaviour
                     {
                         animator.speed = 1;
                     }
-                    transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+                    if (!(objGrabbed != null && objGrabbed.CompareTag("bigbox")))
+                        transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
                     mirandoDer = false;
                     animator.SetBool("walk", false);
                     animator.SetBool("run", true);
@@ -413,14 +437,15 @@ public class MainMovement : MonoBehaviour
                 animator.SetBool("idle", false);
                 animator.SetBool("run", false);
                 break;
-                // case states.grabbing:
-                //     animator.SetBool("walk", false);
-                //     animator.SetBool("idle", false);
-                //     animator.SetBool("run", false); 
-                //     animator.SetBool("jump", false);
-                //     animator.SetBool("fall", false);
-                //     animator.SetBool("grabbing", true);
-                //     break;
+            case states.pushpull:
+                Debug.Log("im so horny");
+                //animator.SetBool("pushpull", true);
+                animator.SetBool("walk", false);
+                animator.SetBool("idle", false);
+                animator.SetBool("run", false);
+                animator.SetBool("jump", false);
+                animator.SetBool("fall", false);
+                break;
         }
     }
 

@@ -699,7 +699,7 @@ GameObject:
   - component: {fileID: 722764634}
   - component: {fileID: 722764633}
   m_Layer: 0
-  m_Name: df365273e4c4beb1b6ec0a3b39381cc9_0
+  m_Name: background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29061,11 +29061,12 @@ MonoBehaviour:
   walkSpeed: 3.5
   jumpForce: 150
   runSpeed: 8
-  grabbingSpeed: 2
+  pushSpeed: 2
   aceleration: 20
   floorMask:
     serializedVersion: 2
     m_Bits: 64
+  objGrbPos: {x: 1.5, y: 0.5, z: 0}
 --- !u!95 &1270114639
 Animator:
   serializedVersion: 7
